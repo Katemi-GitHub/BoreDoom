@@ -33,9 +33,9 @@ def load_map(path):
 game_map = load_map('data/game_map')
 
 # Player Stuff ----------------------------------------------------------------
-m_right = False
-m_left = False
-vertical_momentum = 0
+moving_right = False
+moving_left = False
+player_y_momentum = 0
 air_timer = 0
 true_scroll = [0, 0]
 e.load_animations('data/images/entities/')
@@ -43,6 +43,7 @@ player = e.entity(100, 100, 9, 12, 'player')
 
 # Other Stuff -----------------------------------------------------------------
 bg_color = (76, 64, 102)
+player_jump = 0
 
 while True:  # While loop
     display.fill(bg_color)
@@ -70,14 +71,14 @@ while True:  # While loop
     # Player movement ---------------------------------------------------------
 
     player_movement = [0, 0]
-    if m_right:
+    if moving_right:
         player_movement[0] += 3
-    if m_left:
+    if moving_left:
         player_movement[0] -= 3
-    player_movement[1] += vertical_momentum
-    vertical_momentum += 0.2
-    if vertical_momentum > 5:
-        vertical_momentum = 5
+    player_movement[1] += player_y_momentum
+    player_y_momentum += 0.2
+    if player_y_momentum > 5:
+        player_y_momentum = 5
 
     if player_movement[0] == 0:
         player.set_action('idle')
@@ -91,10 +92,14 @@ while True:  # While loop
     collision_types = player.move(player_movement, tile_rects)
 
     if collision_types['bottom']:
+        player_y_momentum = 0
         air_timer = 0
-        vertical_momentum = 0
+        player_jump = 0
     else:
         air_timer += 1
+
+    if player_jump == 1:
+        player.set_action('jump')
 
     player.change_frame(1)
     player.display(display, scroll)
@@ -104,21 +109,22 @@ while True:  # While loop
             pygame.quit()
             sys.exit()
         if event.type == KEYDOWN:
+            if event.key == K_d:
+                moving_right = True
+            if event.key == K_a:
+                moving_left = True
+            if event.key == K_SPACE:
+                if air_timer < 6:
+                    player_y_momentum = -7
+                    player_jump = 1
             if event.key == K_ESCAPE:
                 pygame.quit()
                 sys.exit()
-            if event.key == K_w:
-                if air_timer < 6:
-                    vertical_momentum = -7
-            if event.key == K_a:
-                m_left = True
-            if event.key == K_d:
-                m_right = True
         if event.type == KEYUP:
-            if event.key == K_a:
-                m_left = False
             if event.key == K_d:
-                m_right = False
+                moving_right = False
+            if event.key == K_a:
+                moving_left = False
 
     screen.blit(pygame.transform.scale(display, WIN_SIZE), (0, 0))
     pygame.display.update()
