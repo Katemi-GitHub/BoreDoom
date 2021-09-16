@@ -69,7 +69,6 @@ while True:  # While loop
         y += 1
 
     # Player movement ---------------------------------------------------------
-
     player_movement = [0, 0]
     if moving_right:
         player_movement[0] += 3
@@ -89,6 +88,7 @@ while True:  # While loop
         player.set_action('run')
         player.set_flip(True)
 
+    # Collision stuff ---------------------------------------------------------
     collision_types = player.move(player_movement, tile_rects)
 
     if collision_types['bottom']:
