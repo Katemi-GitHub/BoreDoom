@@ -1,15 +1,16 @@
 import pygame
 import sys
 import data.engine as e
-Clock = pygame.time.Clock()
+clock = pygame.time.Clock()
 from pygame.locals import *
 pygame.init()
 
 # Window essentials -----------------------------------------------------------
 WIN_SIZE = 960, 520
+surface = (960 / 3, 520 / 3)
 screen = pygame.display.set_mode(WIN_SIZE, 0, 32)
-display = pygame.Surface((480, 260))
-pygame.display.set_caption('BoreDoom v0.1')
+display = pygame.Surface(surface)
+pygame.display.set_caption('BoreDoom v3.3')
 boredoom_icon = pygame.image.load('data/images/boredoom.png').convert()
 boredoom_icon.set_colorkey((0, 0, 0))
 pygame.display.set_icon(boredoom_icon)
@@ -19,6 +20,16 @@ tile_size = 32
 test_img = pygame.image.load('data/images/test_img.png').convert()
 test_img.set_colorkey((255, 0, 255))
 tile_index = {1: test_img}
+
+# Player Stuff ----------------------------------------------------------------
+moving_right = False
+moving_left = False
+player_y_momentum = 0
+air_timer = 0
+player_jump = 0
+true_scroll = [0, 0]
+e.load_animations('data/images/entities/')
+player = e.entity(200, 100, 10, 13, 'player')
 
 # Map Stuff -------------------------------------------------------------------
 def load_map(path):
@@ -32,18 +43,8 @@ def load_map(path):
     return game_map
 game_map = load_map('data/game_map')
 
-# Player Stuff ----------------------------------------------------------------
-moving_right = False
-moving_left = False
-player_y_momentum = 0
-air_timer = 0
-true_scroll = [0, 0]
-e.load_animations('data/images/entities/')
-player = e.entity(100, 100, 9, 12, 'player')
-
 # Other Stuff -----------------------------------------------------------------
 bg_color = (76, 64, 102)
-player_jump = 0
 
 while True:  # While loop
     display.fill(bg_color)
@@ -62,7 +63,7 @@ while True:  # While loop
         x = 0
         for tile in row:
             if tile == '1':
-                display.blit(test_img, (x * tile_size, y * tile_size))
+                display.blit(test_img, (x * tile_size - scroll[0], y * tile_size - scroll[1]))
             if tile != '0':
                 tile_rects.append(pygame.Rect(x * tile_size, y * tile_size, tile_size, tile_size))
             x += 1
@@ -70,9 +71,9 @@ while True:  # While loop
 
     # Player movement ---------------------------------------------------------
     player_movement = [0, 0]
-    if moving_right:
+    if moving_right == True:
         player_movement[0] += 3
-    if moving_left:
+    if moving_left == True:
         player_movement[0] -= 3
     player_movement[1] += player_y_momentum
     player_y_momentum += 0.2
@@ -91,15 +92,15 @@ while True:  # While loop
     # Collision stuff ---------------------------------------------------------
     collision_types = player.move(player_movement, tile_rects)
 
+    if player_jump == 1:
+        player.set_action('jump')
+
     if collision_types['bottom']:
         player_y_momentum = 0
         air_timer = 0
         player_jump = 0
     else:
         air_timer += 1
-
-    if player_jump == 1:
-        player.set_action('jump')
 
     player.change_frame(1)
     player.display(display, scroll)
@@ -115,8 +116,8 @@ while True:  # While loop
                 moving_left = True
             if event.key == K_SPACE:
                 if air_timer < 6:
-                    player_y_momentum = -7
                     player_jump = 1
+                    player_y_momentum = -5
             if event.key == K_ESCAPE:
                 pygame.quit()
                 sys.exit()
@@ -128,4 +129,4 @@ while True:  # While loop
 
     screen.blit(pygame.transform.scale(display, WIN_SIZE), (0, 0))
     pygame.display.update()
-    Clock.tick(60)
+    clock.tick(60)
