@@ -17,14 +17,6 @@ boredoom_icon = pygame.image.load('data/images/boredoom.png').convert()
 boredoom_icon.set_colorkey((0, 0, 0))
 pygame.display.set_icon(boredoom_icon)
 
-# Font ------------------------------------------------------------------------ #
-font = pygame.font.SysFont(None, 32)
-def draw_text(text, font, color, surface, x, y):
-    textobj = font.render(text, 1, color)
-    textrect = textobj.get_rect()
-    textrect.topleft = (x, y)
-    surface.blit(textobj, textrect)
-
 # Stuff ----------------------------------------------------------------------- #
 framerate = 60
 click = False
@@ -36,7 +28,6 @@ def main_menu():
     bg_color = (76, 64, 102)
     while True:
         screen.fill(bg_color)
-        draw_text('Main Menu Beta v3.4', font, (255, 255, 255), screen, 20, 20)
 
         mx, my = pygame.mouse.get_pos()
 
@@ -79,7 +70,6 @@ def options():
     running = True
     while running:
         screen.fill(bg_color)
-        draw_text('Options Beta v3.4 (To do...)', font, (255, 255, 255), screen, 20, 20)
 
         mx, my = pygame.mouse.get_pos()
 
