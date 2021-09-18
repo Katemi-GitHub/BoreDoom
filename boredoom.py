@@ -63,8 +63,11 @@ def main_menu():
         button_1.set_colorkey((0, 0, 0))
         button_2 = pygame.image.load('data/images/buttons/exit.png').convert()
         button_2.set_colorkey((0, 0, 0))
-        button_1_rect = pygame.Rect(50, 100, 200, 50)
-        button_2_rect = pygame.Rect(50, 200, 200, 50)
+        button_3 = pygame.image.load('data/images/buttons/options.png').convert()
+        button_3.set_colorkey((0, 0, 0))
+        button_1_rect = pygame.Rect(380, 300, 200, 50)
+        button_2_rect = pygame.Rect(380, 450, 200, 50)
+        button_3_rect = pygame.Rect(380, 375, 200, 50)
         if button_1_rect.collidepoint((mx, my)):
             if click:
                 level_select()
@@ -72,8 +75,12 @@ def main_menu():
             if click:
                 pygame.quit()
                 sys.exit()
-        screen.blit(pygame.transform.scale(button_1, (200, 50)), (50, 100))
-        screen.blit(pygame.transform.scale(button_2, (200, 50)), (50, 200))
+        if button_3_rect.collidepoint((mx, my)):
+            if click:
+                options()
+        screen.blit(pygame.transform.scale(button_1, (200, 50)), (380, 300))
+        screen.blit(pygame.transform.scale(button_3, (200, 50)), (380, 375))
+        screen.blit(pygame.transform.scale(button_2, (200, 50)), (380, 450))
 
         click = False
         for event in pygame.event.get():
@@ -90,11 +97,68 @@ def main_menu():
 
         pygame.display.update()
         clock.tick(framerate)
+# Options menu Loop ----------------------------------------------------------- #
+def options():
+    global click
+    global framerate
+    bg_color = (76, 64, 102)
+    running = True
+    wait = 0
+    while running:
+        screen.fill(bg_color)
+
+        wait += 1
+
+        mx, my = pygame.mouse.get_pos()
+
+        button_1 = pygame.image.load('data/images/buttons/fps_60.png').convert()
+        button_1.set_colorkey((0, 0, 0))
+        button_2 = pygame.image.load('data/images/buttons/fps_75.png').convert()
+        button_2.set_colorkey((0, 0, 0))
+        button_3 = pygame.image.load('data/images/buttons/menu.png').convert()
+        button_3.set_colorkey((0, 0, 0))
+        button_1_rect = pygame.Rect(380, 100, 200, 50)
+        button_2_rect = pygame.Rect(380, 200, 200, 50)
+        button_3_rect = pygame.Rect(380, 300, 200, 50)
+        if button_1_rect.collidepoint((mx, my)):
+            if wait > 13:
+                if click:
+                    framerate = 60
+                    running = False
+                    wait = 0
+        if button_2_rect.collidepoint((mx, my)):
+            if wait > 13:
+                if click:
+                    framerate = 75
+                    running = False
+                    wait = 0
+        if button_3_rect.collidepoint((mx, my)):
+            if wait > 13:
+                if click:
+                    running = False
+                    wait = 0
+        screen.blit(pygame.transform.scale(button_1, (200, 50)), (380, 100))
+        screen.blit(pygame.transform.scale(button_2, (200, 50)), (380, 200))
+        screen.blit(pygame.transform.scale(button_3, (200, 50)), (380, 300))
+
+        click = False
+        for event in pygame.event.get():
+            if event.type == QUIT:
+                pygame.quit()
+                sys.exit()
+            if event.type == KEYDOWN:
+                if event.key == K_ESCAPE:
+                    running = False
+            if event.type == MOUSEBUTTONDOWN:
+                if event.button == 1:
+                    click = True
+
+        pygame.display.update()
+        clock.tick(framerate)
 
 # Options menu Loop ----------------------------------------------------------- #
 def level_select():
     global click
-    global framerate
     global game_map_level
     global coord_map
     bg_color = (76, 64, 102)
@@ -113,9 +177,9 @@ def level_select():
         button_2.set_colorkey((0, 0, 0))
         button_3 = pygame.image.load('data/images/buttons/menu.png').convert()
         button_3.set_colorkey((0, 0, 0))
-        button_1_rect = pygame.Rect(50, 100, 200, 50)
-        button_2_rect = pygame.Rect(50, 200, 200, 50)
-        button_3_rect = pygame.Rect(50, 300, 200, 50)
+        button_1_rect = pygame.Rect(380, 100, 200, 50)
+        button_2_rect = pygame.Rect(380, 200, 200, 50)
+        button_3_rect = pygame.Rect(380, 300, 200, 50)
         if button_1_rect.collidepoint((mx, my)):
             if wait > 13:
                 if click:
@@ -135,11 +199,11 @@ def level_select():
         if button_3_rect.collidepoint((mx, my)):
             if wait > 13:
                 if click:
-                    main_menu()
+                    running = False
                     wait = 0
-        screen.blit(pygame.transform.scale(button_1, (200, 50)), (50, 100))
-        screen.blit(pygame.transform.scale(button_2, (200, 50)), (50, 200))
-        screen.blit(pygame.transform.scale(button_3, (200, 50)), (50, 300))
+        screen.blit(pygame.transform.scale(button_1, (200, 50)), (380, 100))
+        screen.blit(pygame.transform.scale(button_2, (200, 50)), (380, 200))
+        screen.blit(pygame.transform.scale(button_3, (200, 50)), (380, 300))
 
         click = False
         for event in pygame.event.get():
@@ -158,7 +222,7 @@ def level_select():
 
 # Game Loop ------------------------------------------------------------------- #
 def game():
-    global screen_shake, framerate, test_sound_timer, touching_floor
+    global screen_shake, test_sound_timer, touching_floor
 
     # Player Stuff ------------------------------------------------------------ #
     moving_right = False
@@ -225,20 +289,23 @@ def game():
             if touching_floor == 1:
                 player.set_action('idle')
         if player_movement[0] > 0:
+            player.set_flip(False)
             if touching_floor == 1:
                 player.set_action('run')
-                player.set_flip(False)
-        if player_movement[0] < 0:
-            if touching_floor == 1:
-                player.set_action('run')
-                player.set_flip(True)
-        if player_y_momentum > 0:
             if touching_floor == 0:
-                player.set_action('fall')
-            if player_movement[0] < 0:
-                player.set_flip(True)
-            if player_movement[0] > 0:
-                player.set_flip(False)
+                if player_movement[1] > 0:
+                    player.set_action('fall')
+                if player_movement[1] < 0:
+                    player.set_action('jump')
+        if player_movement[0] < 0:
+            player.set_flip(True)
+            if touching_floor == 1:
+                player.set_action('run')
+            if touching_floor == 0:
+                if player_movement[1] > 0:
+                    player.set_action('fall')
+                if player_movement[1] < 0:
+                    player.set_action('jump')
 
         # Sound stuff ----------------------------------------------------- #
         if test_sound_timer > 0:

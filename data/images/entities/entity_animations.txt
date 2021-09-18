@@ -1,3 +1,4 @@
 player/idle/ 7;7;7;7 loop
 player/fall/ 7;7;7;7;7 loop
+player/jump/ 7;7;7;7 loop
 player/run/ 3;3;3;3;3;3;3 loop
