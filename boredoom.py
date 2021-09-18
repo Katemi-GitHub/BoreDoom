@@ -17,6 +17,41 @@ boredoom_icon = pygame.image.load('data/images/boredoom.png').convert()
 boredoom_icon.set_colorkey((0, 0, 0))
 pygame.display.set_icon(boredoom_icon)
 
+# Tile Stuff -------------------------------------------------------------- #
+tile_size = 16
+test_img = pygame.image.load('data/images/test_img.png').convert()
+test_img.set_colorkey((255, 0, 255))
+
+# Player Stuff ------------------------------------------------------------ #
+moving_right = False
+moving_left = False
+player_y_momentum = 0
+air_timer = 0
+true_scroll = [0, 0]
+e.load_animations('data/images/entities/')
+player = e.entity(64, 118, 7, 13, 'player')
+
+# Sound Stuff ------------------------------------------------------------- #
+jump_sound = pygame.mixer.Sound('data/audio/jump.wav')
+test_sound = [pygame.mixer.Sound('data/audio/test_0.mp3'),
+              pygame.mixer.Sound('data/audio/test_1.mp3'),
+              pygame.mixer.Sound('data/audio/test_2.mp3')]
+test_sound[0].set_volume(0.4)
+test_sound[1].set_volume(0.4)
+test_sound[2].set_volume(0.4)
+test_sound_timer = 0
+
+
+# pygame.mixer.music.load('data/audio/music.wav')
+# pygame.mixer.music.play(-1)
+
+# Other Stuff ------------------------------------------------------------- #
+bg_color = (76, 64, 102)
+touching_floor = 1
+framerate = 60
+screen_shake = 0
+game_map_level = ()
+
 # Stuff ----------------------------------------------------------------------- #
 framerate = 60
 click = False
@@ -66,6 +101,7 @@ def main_menu():
 def options():
     global click
     global framerate
+    global game_map_level
     bg_color = (76, 64, 102)
     running = True
     while running:
@@ -78,10 +114,10 @@ def options():
         button_3 = pygame.Rect(50, 300, 200, 50)
         if button_1.collidepoint((mx, my)):
             if click:
-                framerate = 60
+                game_map_level = 'data/game_map'
         if button_2.collidepoint((mx, my)):
             if click:
-                framerate = 75
+                game_map_level = 'data/game_map_2'
         if button_3.collidepoint((mx, my)):
             if click:
                 main_menu()
@@ -106,34 +142,8 @@ def options():
 
 # Game Loop ------------------------------------------------------------------- #
 def game():
+    global screen_shake, framerate, moving_left, moving_right, player_y_momentum, test_sound_timer, air_timer, touching_floor
     running = True
-    # Tile Stuff -------------------------------------------------------------- #
-    tile_size = 16
-    test_img = pygame.image.load('data/images/test_img.png').convert()
-    test_img.set_colorkey((255, 0, 255))
-
-    # Player Stuff ------------------------------------------------------------ #
-    moving_right = False
-    moving_left = False
-    player_y_momentum = 0
-    air_timer = 0
-    player_jump = 0
-    true_scroll = [0, 0]
-    e.load_animations('data/images/entities/')
-    player = e.entity(64, 118, 10, 13, 'player')
-
-    # Sound Stuff ------------------------------------------------------------- #
-    jump_sound = pygame.mixer.Sound('data/audio/jump.wav')
-    test_sound = [pygame.mixer.Sound('data/audio/test_0.mp3'),
-                  pygame.mixer.Sound('data/audio/test_1.mp3'),
-                  pygame.mixer.Sound('data/audio/test_2.mp3')]
-    test_sound[0].set_volume(0.4)
-    test_sound[1].set_volume(0.4)
-    test_sound[2].set_volume(0.4)
-    test_sound_timer = 0
-
-    # pygame.mixer.music.load('data/audio/music.wav')
-    # pygame.mixer.music.play(-1)
 
     # Map Stuff --------------------------------------------------------------- #
     def load_map(path):
@@ -146,13 +156,7 @@ def game():
             game_map.append(list(row))
         return game_map
 
-    game_map = load_map('data/game_map')
-
-    # Other Stuff ------------------------------------------------------------- #
-    bg_color = (76, 64, 102)
-    touching_floor = 1
-    framerate = 60
-    screen_shake = 0
+    game_map = load_map(game_map_level)
 
     while running:
         display.fill(bg_color)
@@ -200,9 +204,6 @@ def game():
         if player_movement[0] < 0:
             player.set_action('run')
             player.set_flip(True)
-        if player_y_momentum > 0:
-            if touching_floor == 0:
-                true_scroll[1] += (player.y - true_scroll[1] + 75) / 75
 
         # Sound stuff ----------------------------------------------------- #
         if test_sound_timer > 0:
@@ -215,7 +216,6 @@ def game():
             touching_floor = 1
             player_y_momentum = 0
             air_timer = 0
-            player_jump = 0
             if player_movement[0] != 0:
                 if test_sound_timer == 0:
                     test_sound_timer = 12
@@ -223,9 +223,12 @@ def game():
         else:
             if collision_types['top']:
                 player_y_momentum = 0
-            if player_jump == 1:
-                player.set_action('jump')
             air_timer += 1
+
+        if player_y_momentum < 0:
+            if collision_types['bottom'] == False:
+                if touching_floor == 0:
+                    player.set_action('fall')
 
         player.change_frame(1)
         player.display(display, scroll)
@@ -242,7 +245,6 @@ def game():
                     moving_left = True
                 if event.key == K_SPACE:
                     if air_timer < 6:
-                        player_jump = 1
                         player_y_momentum = -5.75
                         touching_floor = 0
                         jump_sound.play()
