@@ -12,7 +12,7 @@ WIN_SIZE = 960, 520
 surface = (960 / 4, 520 / 4)
 screen = pygame.display.set_mode(WIN_SIZE, 0, 32)
 display = pygame.Surface(surface)
-pygame.display.set_caption('BoreDoom v3.4')
+pygame.display.set_caption('BoreDoom v3.5')
 boredoom_icon = pygame.image.load('data/images/boredoom.png').convert()
 boredoom_icon.set_colorkey((0, 0, 0))
 pygame.display.set_icon(boredoom_icon)
@@ -21,15 +21,6 @@ pygame.display.set_icon(boredoom_icon)
 tile_size = 16
 test_img = pygame.image.load('data/images/test_img.png').convert()
 test_img.set_colorkey((255, 0, 255))
-
-# Player Stuff ------------------------------------------------------------ #
-moving_right = False
-moving_left = False
-player_y_momentum = 0
-air_timer = 0
-true_scroll = [0, 0]
-e.load_animations('data/images/entities/')
-player = e.entity(64, 118, 7, 13, 'player')
 
 # Sound Stuff ------------------------------------------------------------- #
 jump_sound = pygame.mixer.Sound('data/audio/jump.wav')
@@ -54,30 +45,33 @@ game_map_level = ()
 
 # Stuff ----------------------------------------------------------------------- #
 framerate = 60
+coord_map = [0, 0]
 click = False
 
 # Main menu Loop -------------------------------------------------------------- #
 def main_menu():
     global click
     global framerate
+    global game_map_level
     bg_color = (76, 64, 102)
     while True:
         screen.fill(bg_color)
 
         mx, my = pygame.mouse.get_pos()
 
-        button_1 = pygame.image.load('data/images/start.png').convert()
+        button_1 = pygame.image.load('data/images/buttons/level_select.png').convert()
         button_1.set_colorkey((0, 0, 0))
-        button_2 = pygame.image.load('data/images/options.png').convert()
+        button_2 = pygame.image.load('data/images/buttons/exit.png').convert()
         button_2.set_colorkey((0, 0, 0))
         button_1_rect = pygame.Rect(50, 100, 200, 50)
         button_2_rect = pygame.Rect(50, 200, 200, 50)
         if button_1_rect.collidepoint((mx, my)):
             if click:
-                game()
+                level_select()
         if button_2_rect.collidepoint((mx, my)):
             if click:
-                options()
+                pygame.quit()
+                sys.exit()
         screen.blit(pygame.transform.scale(button_1, (200, 50)), (50, 100))
         screen.blit(pygame.transform.scale(button_2, (200, 50)), (50, 200))
 
@@ -98,32 +92,54 @@ def main_menu():
         clock.tick(framerate)
 
 # Options menu Loop ----------------------------------------------------------- #
-def options():
+def level_select():
     global click
     global framerate
     global game_map_level
+    global coord_map
     bg_color = (76, 64, 102)
     running = True
+    wait = 0
     while running:
         screen.fill(bg_color)
 
+        wait += 1
+
         mx, my = pygame.mouse.get_pos()
 
-        button_1 = pygame.Rect(50, 100, 200, 50)
-        button_2 = pygame.Rect(50, 200, 200, 50)
-        button_3 = pygame.Rect(50, 300, 200, 50)
-        if button_1.collidepoint((mx, my)):
-            if click:
-                game_map_level = 'data/game_map'
-        if button_2.collidepoint((mx, my)):
-            if click:
-                game_map_level = 'data/game_map_2'
-        if button_3.collidepoint((mx, my)):
-            if click:
-                main_menu()
-        pygame.draw.rect(screen, (255, 0, 0), button_1)
-        pygame.draw.rect(screen, (255, 0, 0), button_2)
-        pygame.draw.rect(screen, (255, 0, 0), button_3)
+        button_1 = pygame.image.load('data/images/buttons/level_1.png').convert()
+        button_1.set_colorkey((0, 0, 0))
+        button_2 = pygame.image.load('data/images/buttons/level_2.png').convert()
+        button_2.set_colorkey((0, 0, 0))
+        button_3 = pygame.image.load('data/images/buttons/menu.png').convert()
+        button_3.set_colorkey((0, 0, 0))
+        button_1_rect = pygame.Rect(50, 100, 200, 50)
+        button_2_rect = pygame.Rect(50, 200, 200, 50)
+        button_3_rect = pygame.Rect(50, 300, 200, 50)
+        if button_1_rect.collidepoint((mx, my)):
+            if wait > 13:
+                if click:
+                    game_map_level = 'data/game_map'
+                    coord_map[0] = 64
+                    coord_map[1] = 118
+                    game()
+                    wait = 0
+        if button_2_rect.collidepoint((mx, my)):
+            if wait > 13:
+                if click:
+                    game_map_level = 'data/game_map_2'
+                    coord_map[0] = 64
+                    coord_map[1] = 234
+                    game()
+                    wait = 0
+        if button_3_rect.collidepoint((mx, my)):
+            if wait > 13:
+                if click:
+                    main_menu()
+                    wait = 0
+        screen.blit(pygame.transform.scale(button_1, (200, 50)), (50, 100))
+        screen.blit(pygame.transform.scale(button_2, (200, 50)), (50, 200))
+        screen.blit(pygame.transform.scale(button_3, (200, 50)), (50, 300))
 
         click = False
         for event in pygame.event.get():
@@ -142,7 +158,16 @@ def options():
 
 # Game Loop ------------------------------------------------------------------- #
 def game():
-    global screen_shake, framerate, moving_left, moving_right, player_y_momentum, test_sound_timer, air_timer, touching_floor
+    global screen_shake, framerate, test_sound_timer, touching_floor
+
+    # Player Stuff ------------------------------------------------------------ #
+    moving_right = False
+    moving_left = False
+    player_y_momentum = 0
+    air_timer = 0
+    true_scroll = [0, 0]
+    e.load_animations('data/images/entities/')
+    player = e.entity(coord_map[0], coord_map[1], 11, 13, 'player')
     running = True
 
     # Map Stuff --------------------------------------------------------------- #
@@ -197,13 +222,23 @@ def game():
             player_y_momentum = 5.75
 
         if player_movement[0] == 0:
-            player.set_action('idle')
+            if touching_floor == 1:
+                player.set_action('idle')
         if player_movement[0] > 0:
-            player.set_action('run')
-            player.set_flip(False)
+            if touching_floor == 1:
+                player.set_action('run')
+                player.set_flip(False)
         if player_movement[0] < 0:
-            player.set_action('run')
-            player.set_flip(True)
+            if touching_floor == 1:
+                player.set_action('run')
+                player.set_flip(True)
+        if player_y_momentum > 0:
+            if touching_floor == 0:
+                player.set_action('fall')
+            if player_movement[0] < 0:
+                player.set_flip(True)
+            if player_movement[0] > 0:
+                player.set_flip(False)
 
         # Sound stuff ----------------------------------------------------- #
         if test_sound_timer > 0:
@@ -224,11 +259,6 @@ def game():
             if collision_types['top']:
                 player_y_momentum = 0
             air_timer += 1
-
-        if player_y_momentum < 0:
-            if collision_types['bottom'] == False:
-                if touching_floor == 0:
-                    player.set_action('fall')
 
         player.change_frame(1)
         player.display(display, scroll)
