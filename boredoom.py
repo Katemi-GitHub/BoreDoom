@@ -32,7 +32,6 @@ test_sound[1].set_volume(0.4)
 test_sound[2].set_volume(0.4)
 test_sound_timer = 0
 
-
 # pygame.mixer.music.load('data/audio/music.wav')
 # pygame.mixer.music.play(-1)
 
@@ -42,8 +41,6 @@ touching_floor = 1
 framerate = 60
 screen_shake = 0
 game_map_level = ()
-
-# Stuff ----------------------------------------------------------------------- #
 framerate = 60
 coord_map = [0, 0]
 click = False
@@ -58,7 +55,6 @@ def main_menu():
         screen.fill(bg_color)
 
         mx, my = pygame.mouse.get_pos()
-
         button_1 = pygame.image.load('data/images/buttons/level_select.png').convert()
         button_1.set_colorkey((0, 0, 0))
         button_2 = pygame.image.load('data/images/buttons/exit.png').convert()
@@ -106,11 +102,9 @@ def options():
     wait = 0
     while running:
         screen.fill(bg_color)
-
         wait += 1
 
         mx, my = pygame.mouse.get_pos()
-
         button_1 = pygame.image.load('data/images/buttons/fps_60.png').convert()
         button_1.set_colorkey((0, 0, 0))
         button_2 = pygame.image.load('data/images/buttons/fps_75.png').convert()
@@ -166,11 +160,9 @@ def level_select():
     wait = 0
     while running:
         screen.fill(bg_color)
-
         wait += 1
 
         mx, my = pygame.mouse.get_pos()
-
         button_1 = pygame.image.load('data/images/buttons/level_1.png').convert()
         button_1.set_colorkey((0, 0, 0))
         button_2 = pygame.image.load('data/images/buttons/level_2.png').convert()
@@ -222,7 +214,7 @@ def level_select():
 
 # Game Loop ------------------------------------------------------------------- #
 def game():
-    global screen_shake, test_sound_timer, touching_floor
+    global screen_shake, test_sound_timer, touching_floor, framerate
 
     # Player Stuff ------------------------------------------------------------ #
     moving_right = False
@@ -233,6 +225,7 @@ def game():
     e.load_animations('data/images/entities/')
     player = e.entity(coord_map[0], coord_map[1], 11, 13, 'player')
     running = True
+    double_jump = 0
 
     # Map Stuff --------------------------------------------------------------- #
     def load_map(path):
@@ -252,7 +245,7 @@ def game():
 
         # Scroll Stuff ---------------------------------------------------- #
         true_scroll[0] += (player.x - true_scroll[0] - 120) / 20
-        true_scroll[1] += (player.y - true_scroll[1] - 75) / 10
+        true_scroll[1] += (player.y - true_scroll[1] - 75) / 5
         scroll = true_scroll.copy()
         scroll[0] = int(scroll[0])
         scroll[1] = int(scroll[1])
@@ -288,6 +281,11 @@ def game():
         if player_movement[0] == 0:
             if touching_floor == 1:
                 player.set_action('idle')
+            if touching_floor == 0:
+                if player_movement[1] > 0:
+                    player.set_action('fall')
+                if player_movement[1] < 0:
+                    player.set_action('jump')
         if player_movement[0] > 0:
             player.set_flip(False)
             if touching_floor == 1:
@@ -306,6 +304,11 @@ def game():
                     player.set_action('fall')
                 if player_movement[1] < 0:
                     player.set_action('jump')
+        if touching_floor == 0:
+            if player_movement[1] > 0:
+                player.set_action('fall')
+            if player_movement[1] < 0:
+                player.set_action('jump')
 
         # Sound stuff ----------------------------------------------------- #
         if test_sound_timer > 0:
@@ -315,8 +318,9 @@ def game():
         collision_types = player.move(player_movement, tile_rects)
 
         if collision_types['bottom']:
+            double_jump = 0
             touching_floor = 1
-            player_y_momentum = 0
+            player_y_momentum = 1
             air_timer = 0
             if player_movement[0] != 0:
                 if test_sound_timer == 0:
@@ -326,6 +330,12 @@ def game():
             if collision_types['top']:
                 player_y_momentum = 0
             air_timer += 1
+            touching_floor = 0
+
+        if double_jump == 2:
+            double_jump += 1
+            player_y_momentum = -5.75
+            jump_sound.play()
 
         player.change_frame(1)
         player.display(display, scroll)
@@ -341,6 +351,7 @@ def game():
                 if event.key == K_a:
                     moving_left = True
                 if event.key == K_SPACE:
+                    double_jump += 1
                     if air_timer < 6:
                         player_y_momentum = -5.75
                         touching_floor = 0
@@ -350,11 +361,15 @@ def game():
                     running = False
                 if event.key == K_e:
                     screen_shake = 30
+                if event.key == K_q:
+                    framerate = 10
             if event.type == KEYUP:
                 if event.key == K_d:
                     moving_right = False
                 if event.key == K_a:
                     moving_left = False
+                if event.key == K_q:
+                    framerate = 60
 
         if screen_shake > 0:
             screen_shake -= 1
