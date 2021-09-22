@@ -2,8 +2,10 @@ import pygame
 import sys
 import random
 import data.engine as e
+
 clock = pygame.time.Clock()
 from pygame.locals import *
+
 pygame.mixer.pre_init(44100, -16, 2, 512)
 pygame.init()
 
@@ -12,7 +14,7 @@ WIN_SIZE = 960, 520
 surface = (960 / 4, 520 / 4)
 screen = pygame.display.set_mode(WIN_SIZE, 0, 32)
 display = pygame.Surface(surface)
-pygame.display.set_caption('BoreDoom v3.5')
+pygame.display.set_caption('BoreDoom v3.5.2')
 boredoom_icon = pygame.image.load('data/images/boredoom.png').convert()
 boredoom_icon.set_colorkey((0, 0, 0))
 pygame.display.set_icon(boredoom_icon)
@@ -44,6 +46,7 @@ game_map_level = ()
 framerate = 60
 coord_map = [0, 0]
 click = False
+
 
 # Main menu Loop -------------------------------------------------------------- #
 def main_menu():
@@ -93,6 +96,8 @@ def main_menu():
 
         pygame.display.update()
         clock.tick(framerate)
+
+
 # Options menu Loop ----------------------------------------------------------- #
 def options():
     global click
@@ -149,6 +154,7 @@ def options():
 
         pygame.display.update()
         clock.tick(framerate)
+
 
 # Options menu Loop ----------------------------------------------------------- #
 def level_select():
@@ -212,6 +218,7 @@ def level_select():
         pygame.display.update()
         clock.tick(framerate)
 
+
 # Game Loop ------------------------------------------------------------------- #
 def game():
     global screen_shake, test_sound_timer, touching_floor, framerate
@@ -226,6 +233,11 @@ def game():
     player = e.entity(coord_map[0], coord_map[1], 11, 13, 'player')
     running = True
     double_jump = 0
+    jumped = 0
+
+    # Weapon Test ------------------------------------------------------------- #
+    wand_test = pygame.image.load('data/images/wand_test.png').convert()
+    wand_test.set_colorkey((255, 255, 255))
 
     # Map Stuff --------------------------------------------------------------- #
     def load_map(path):
@@ -318,6 +330,7 @@ def game():
         collision_types = player.move(player_movement, tile_rects)
 
         if collision_types['bottom']:
+            jumped = 0
             double_jump = 0
             touching_floor = 1
             player_y_momentum = 1
@@ -331,6 +344,10 @@ def game():
                 player_y_momentum = 0
             air_timer += 1
             touching_floor = 0
+        if player_movement[1] > 0:
+            if jumped == 0:
+                if air_timer > 6:
+                    double_jump = 1
 
         if double_jump == 2:
             double_jump += 1
@@ -339,6 +356,8 @@ def game():
 
         player.change_frame(1)
         player.display(display, scroll)
+
+        display.blit(wand_test, ((player.x - scroll[0]), (player.y - scroll[1])))
 
         for event in pygame.event.get():  # Event loop ------------------------ #
             if event.type == QUIT:
@@ -352,6 +371,7 @@ def game():
                     moving_left = True
                 if event.key == K_SPACE:
                     double_jump += 1
+                    jumped = 1
                     if air_timer < 6:
                         player_y_momentum = -5.75
                         touching_floor = 0
@@ -370,12 +390,12 @@ def game():
                     moving_left = False
                 if event.key == K_q:
                     framerate = 60
-
         if screen_shake > 0:
             screen_shake -= 1
 
         screen.blit(pygame.transform.scale(display, WIN_SIZE), (0, 0))
         pygame.display.update()
         clock.tick(framerate)
+
 
 main_menu()
