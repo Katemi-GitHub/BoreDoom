@@ -2,7 +2,8 @@ import pygame
 import sys
 import random
 import data.engine as e
-
+from data.tilesheet import Tilesheet
+from math import atan2, pi, degrees
 clock = pygame.time.Clock()
 from pygame.locals import *
 
@@ -14,15 +15,14 @@ WIN_SIZE = 960, 520
 surface = (960 / 4, 520 / 4)
 screen = pygame.display.set_mode(WIN_SIZE, 0, 32)
 display = pygame.Surface(surface)
-pygame.display.set_caption('BoreDoom v3.5.2')
+pygame.display.set_caption('BoreDoom v3.5.3')
 boredoom_icon = pygame.image.load('data/images/boredoom.png').convert()
 boredoom_icon.set_colorkey((0, 0, 0))
 pygame.display.set_icon(boredoom_icon)
 
 # Tile Stuff -------------------------------------------------------------- #
 tile_size = 16
-test_img = pygame.image.load('data/images/test_img.png').convert()
-test_img.set_colorkey((255, 0, 255))
+tiles = Tilesheet('data/images/tilesheet_1.png', 16, 16, 2, 2)
 
 # Sound Stuff ------------------------------------------------------------- #
 jump_sound = pygame.mixer.Sound('data/audio/jump.wav')
@@ -47,13 +47,12 @@ framerate = 60
 coord_map = [0, 0]
 click = False
 
-
 # Main menu Loop -------------------------------------------------------------- #
 def main_menu():
     global click
     global framerate
     global game_map_level
-    bg_color = (76, 64, 102)
+    global bg_color
     while True:
         screen.fill(bg_color)
 
@@ -102,7 +101,7 @@ def main_menu():
 def options():
     global click
     global framerate
-    bg_color = (76, 64, 102)
+    global bg_color
     running = True
     wait = 0
     while running:
@@ -161,7 +160,7 @@ def level_select():
     global click
     global game_map_level
     global coord_map
-    bg_color = (76, 64, 102)
+    global bg_color
     running = True
     wait = 0
     while running:
@@ -221,7 +220,7 @@ def level_select():
 
 # Game Loop ------------------------------------------------------------------- #
 def game():
-    global screen_shake, test_sound_timer, touching_floor, framerate
+    global screen_shake, test_sound_timer, touching_floor, framerate, bg_color
 
     # Player Stuff ------------------------------------------------------------ #
     moving_right = False
@@ -234,10 +233,6 @@ def game():
     running = True
     double_jump = 0
     jumped = 0
-
-    # Weapon Test ------------------------------------------------------------- #
-    wand_test = pygame.image.load('data/images/wand_test.png').convert()
-    wand_test.set_colorkey((255, 255, 255))
 
     # Map Stuff --------------------------------------------------------------- #
     def load_map(path):
@@ -273,7 +268,13 @@ def game():
             x = 0
             for tile in row:
                 if tile == '1':
-                    display.blit(test_img, (x * tile_size - scroll[0], y * tile_size - scroll[1]))
+                    display.blit((tiles.get_tile(0, 0)), (x * tile_size - scroll[0], y * tile_size - scroll[1]))
+                if tile == '2':
+                    display.blit((tiles.get_tile(0, 1)), (x * tile_size - scroll[0], y * tile_size - scroll[1]))
+                if tile == '3':
+                    display.blit((tiles.get_tile(1, 1)), (x * tile_size - scroll[0], y * tile_size - scroll[1]))
+                if tile == '4':
+                    display.blit((tiles.get_tile(1, 0)), (x * tile_size - scroll[0], y * tile_size - scroll[1]))
                 if tile != '0':
                     tile_rects.append(pygame.Rect(x * tile_size, y * tile_size, tile_size, tile_size))
                 x += 1
@@ -354,10 +355,23 @@ def game():
             player_y_momentum = -5.75
             jump_sound.play()
 
+        # Weapon Stuff -------------------------------------------------------- #
+        mx, my = pygame.mouse.get_pos()
+        true_mx, true_my = ((mx - true_scroll[0] / player.x) / 4, (my - true_scroll[1] / player.y) / 4)
+        true_px, true_py = (player.x - true_scroll[0]) + 5, (player.y - true_scroll[1]) + 6
+        wand_test = pygame.image.load('data/images/wand_test.png').convert()
+        wand_test.set_colorkey((255, 255, 255))
+        dx = true_mx - true_px
+        dy = true_my - true_py
+        rads = atan2(-dy, dx)
+        rads %= 2*pi
+        degs = degrees(rads)
+        true_degs = degs - 85
+        wand_test_copy = pygame.transform.rotate(wand_test, true_degs)
+        display.blit(wand_test_copy, (true_px - int(wand_test_copy.get_width() / 2), true_py - int(wand_test_copy.get_height() / 2)))
+
         player.change_frame(1)
         player.display(display, scroll)
-
-        display.blit(wand_test, ((player.x - scroll[0]), (player.y - scroll[1])))
 
         for event in pygame.event.get():  # Event loop ------------------------ #
             if event.type == QUIT:
