@@ -22,7 +22,7 @@ pygame.display.set_icon(boredoom_icon)
 
 # Tile Stuff -------------------------------------------------------------- #
 tile_size = 16
-tiles = Tilesheet('data/images/tilesheet_1.png', 16, 16, 2, 2)
+tiles = Tilesheet('data/images/tilesheet_1.png', 16, 16, 4, 4)
 
 # Sound Stuff ------------------------------------------------------------- #
 jump_sound = pygame.mixer.Sound('data/audio/jump.wav')
@@ -38,7 +38,7 @@ test_sound_timer = 0
 # pygame.mixer.music.play(-1)
 
 # Other Stuff ------------------------------------------------------------- #
-bg_color = (76, 64, 102)
+bg_color = (69, 40, 60)
 touching_floor = 1
 framerate = 60
 screen_shake = 0
@@ -181,7 +181,7 @@ def level_select():
             if wait > 13:
                 if click:
                     game_map_level = 'data/game_map'
-                    coord_map[0] = 64
+                    coord_map[0] = 176
                     coord_map[1] = 118
                     game()
                     wait = 0
@@ -189,8 +189,8 @@ def level_select():
             if wait > 13:
                 if click:
                     game_map_level = 'data/game_map_2'
-                    coord_map[0] = 64
-                    coord_map[1] = 234
+                    coord_map[0] = 32
+                    coord_map[1] = 352
                     game()
                     wait = 0
         if button_3_rect.collidepoint((mx, my)):
@@ -226,6 +226,7 @@ def game():
     moving_right = False
     moving_left = False
     player_y_momentum = 0
+    player_x_momentum = 0
     air_timer = 0
     true_scroll = [0, 0]
     e.load_animations('data/images/entities/')
@@ -233,6 +234,10 @@ def game():
     running = True
     double_jump = 0
     jumped = 0
+    slidding_wall_r = 0
+    slidding_wall_l = 0
+    a_slide_r = 0
+    a_slide_l = 0
 
     # Map Stuff --------------------------------------------------------------- #
     def load_map(path):
@@ -275,6 +280,28 @@ def game():
                     display.blit((tiles.get_tile(1, 1)), (x * tile_size - scroll[0], y * tile_size - scroll[1]))
                 if tile == '4':
                     display.blit((tiles.get_tile(1, 0)), (x * tile_size - scroll[0], y * tile_size - scroll[1]))
+                if tile == '5':
+                    display.blit((tiles.get_tile(2, 0)), (x * tile_size - scroll[0], y * tile_size - scroll[1]))
+                if tile == '6':
+                    display.blit((tiles.get_tile(2, 1)), (x * tile_size - scroll[0], y * tile_size - scroll[1]))
+                if tile == '7':
+                    display.blit((tiles.get_tile(3, 0)), (x * tile_size - scroll[0], y * tile_size - scroll[1]))
+                if tile == '8':
+                    display.blit((tiles.get_tile(3, 1)), (x * tile_size - scroll[0], y * tile_size - scroll[1]))
+                if tile == '9':
+                    display.blit((tiles.get_tile(0, 2)), (x * tile_size - scroll[0], y * tile_size - scroll[1]))
+                if tile == 'a':
+                    display.blit((tiles.get_tile(1, 2)), (x * tile_size - scroll[0], y * tile_size - scroll[1]))
+                if tile == 'b':
+                    display.blit((tiles.get_tile(2, 2)), (x * tile_size - scroll[0], y * tile_size - scroll[1]))
+                if tile == 'c':
+                    display.blit((tiles.get_tile(3, 2)), (x * tile_size - scroll[0], y * tile_size - scroll[1]))
+                if tile == 'd':
+                    display.blit((tiles.get_tile(0, 3)), (x * tile_size - scroll[0], y * tile_size - scroll[1]))
+                if tile == 'e':
+                    display.blit((tiles.get_tile(1, 3)), (x * tile_size - scroll[0], y * tile_size - scroll[1]))
+                if tile == 'f':
+                    display.blit((tiles.get_tile(2, 3)), (x * tile_size - scroll[0], y * tile_size - scroll[1]))
                 if tile != '0':
                     tile_rects.append(pygame.Rect(x * tile_size, y * tile_size, tile_size, tile_size))
                 x += 1
@@ -287,6 +314,7 @@ def game():
         if moving_left == True:
             player_movement[0] -= 2.75
         player_movement[1] += player_y_momentum
+        player_movement[0] += player_x_momentum
         player_y_momentum += 0.2
         if player_y_momentum > 5.75:
             player_y_momentum = 5.75
@@ -331,6 +359,10 @@ def game():
         collision_types = player.move(player_movement, tile_rects)
 
         if collision_types['bottom']:
+            slidding_wall_r = 0
+            slidding_wall_l = 0
+            a_slide_l = 0
+            a_slide_r = 0
             jumped = 0
             double_jump = 0
             touching_floor = 1
@@ -349,11 +381,36 @@ def game():
             if jumped == 0:
                 if air_timer > 6:
                     double_jump = 1
-
         if double_jump == 2:
             double_jump += 1
-            player_y_momentum = -5.75
+            if slidding_wall_l == 0:
+                player_y_momentum = -5.75
+            if slidding_wall_r == 0:
+                player_y_momentum = -5.75
+            if slidding_wall_r == 1:
+                player_y_momentum = -5.75
+                a_slide_l = 0
+                a_slide_r = 1
+            if slidding_wall_l == 1:
+                player_y_momentum = -5.75
+                a_slide_r = 0
+                a_slide_l = 1
             jump_sound.play()
+        if player_movement[1] > 0:
+            if a_slide_l == 0:
+                if collision_types['left']:
+                    if slidding_wall_l == 1:
+                        double_jump = 1
+                        player_y_momentum /= 2
+                        player.set_action('slide')
+                        player.set_flip(True)
+            if a_slide_r == 0:
+                if collision_types['right']:
+                    if slidding_wall_r == 1:
+                        double_jump = 1
+                        player_y_momentum /= 2
+                        player.set_action('slide')
+                        player.set_flip(False)
 
         # Weapon Stuff -------------------------------------------------------- #
         mx, my = pygame.mouse.get_pos()
@@ -367,8 +424,8 @@ def game():
         rads %= 2*pi
         degs = degrees(rads)
         true_degs = degs - 85
-        wand_test_copy = pygame.transform.rotate(wand_test, true_degs)
-        display.blit(wand_test_copy, (true_px - int(wand_test_copy.get_width() / 2), true_py - int(wand_test_copy.get_height() / 2)))
+        #wand_test_copy = pygame.transform.rotate(wand_test, true_degs)
+        #display.blit(wand_test_copy, (true_px - int(wand_test_copy.get_width() / 2), true_py - int(wand_test_copy.get_height() / 2)))
 
         player.change_frame(1)
         player.display(display, scroll)
@@ -381,8 +438,10 @@ def game():
             if event.type == KEYDOWN:
                 if event.key == K_d:
                     moving_right = True
+                    slidding_wall_r = 1
                 if event.key == K_a:
                     moving_left = True
+                    slidding_wall_l = 1
                 if event.key == K_SPACE:
                     double_jump += 1
                     jumped = 1
@@ -410,6 +469,5 @@ def game():
         screen.blit(pygame.transform.scale(display, WIN_SIZE), (0, 0))
         pygame.display.update()
         clock.tick(framerate)
-
 
 main_menu()
