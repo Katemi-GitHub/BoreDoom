@@ -15,7 +15,7 @@ WIN_SIZE = 960, 520
 surface = (960 / 4, 520 / 4)
 screen = pygame.display.set_mode(WIN_SIZE, 0, 32)
 display = pygame.Surface(surface)
-pygame.display.set_caption('BoreDoom v3.5.3')
+pygame.display.set_caption('BoreDoom v3.5.4')
 boredoom_icon = pygame.image.load('data/images/boredoom.png').convert()
 boredoom_icon.set_colorkey((0, 0, 0))
 pygame.display.set_icon(boredoom_icon)
@@ -381,6 +381,7 @@ def game():
             if jumped == 0:
                 if air_timer > 6:
                     double_jump = 1
+
         if double_jump == 2:
             double_jump += 1
             if slidding_wall_l == 0:
@@ -396,6 +397,7 @@ def game():
                 a_slide_r = 0
                 a_slide_l = 1
             jump_sound.play()
+
         if player_movement[1] > 0:
             if a_slide_l == 0:
                 if collision_types['left']:
@@ -404,6 +406,7 @@ def game():
                         player_y_momentum /= 2
                         player.set_action('slide')
                         player.set_flip(True)
+        if player_movement[1] > 0:
             if a_slide_r == 0:
                 if collision_types['right']:
                     if slidding_wall_r == 1:
