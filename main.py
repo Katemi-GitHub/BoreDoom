@@ -15,7 +15,7 @@ WIN_SIZE = 960, 520
 surface = (960 / 4, 520 / 4)
 screen = pygame.display.set_mode(WIN_SIZE, 0, 32)
 display = pygame.Surface(surface)
-pygame.display.set_caption('BoreDoom v3.5.4')
+pygame.display.set_caption('BoreDoom Beta v3.6')
 boredoom_icon = pygame.image.load('data/images/boredoom.png').convert()
 boredoom_icon.set_colorkey((0, 0, 0))
 pygame.display.set_icon(boredoom_icon)
@@ -252,6 +252,19 @@ def game():
 
     game_map = load_map(game_map_level)
 
+    # Weapon Stuff -------------------------------------------------------- #
+    mx, my = pygame.mouse.get_pos()
+    true_mx, true_my = ((mx - true_scroll[0] / player.x) / 4, (my - true_scroll[1] / player.y) / 4)
+    true_px, true_py = (player.x - true_scroll[0]) + 5, (player.y - true_scroll[1]) + 6
+    wand_test = pygame.image.load('data/images/wand_test.png').convert()
+    wand_test.set_colorkey((255, 255, 255))
+    dx = true_mx - true_px
+    dy = true_my - true_py
+    rads = atan2(-dy, dx)
+    rads %= 2 * pi
+    degs = degrees(rads)
+    true_degs = degs - 85
+
     while running:
         display.fill(bg_color)
 
@@ -314,7 +327,6 @@ def game():
         if moving_left == True:
             player_movement[0] -= 2.75
         player_movement[1] += player_y_momentum
-        player_movement[0] += player_x_momentum
         player_y_momentum += 0.2
         if player_y_momentum > 5.75:
             player_y_momentum = 5.75
@@ -384,9 +396,9 @@ def game():
 
         if double_jump == 2:
             double_jump += 1
-            if slidding_wall_l == 0:
-                player_y_momentum = -5.75
             if slidding_wall_r == 0:
+                player_y_momentum = -5.75
+            if slidding_wall_l == 0:
                 player_y_momentum = -5.75
             if slidding_wall_r == 1:
                 player_y_momentum = -5.75
@@ -399,34 +411,25 @@ def game():
             jump_sound.play()
 
         if player_movement[1] > 0:
-            if a_slide_l == 0:
-                if collision_types['left']:
-                    if slidding_wall_l == 1:
-                        double_jump = 1
-                        player_y_momentum /= 2
-                        player.set_action('slide')
-                        player.set_flip(True)
-        if player_movement[1] > 0:
             if a_slide_r == 0:
                 if collision_types['right']:
                     if slidding_wall_r == 1:
+                        a_slide_l = 1
                         double_jump = 1
                         player_y_momentum /= 2
+                        slidding_wall_l = 0
                         player.set_action('slide')
                         player.set_flip(False)
+            if a_slide_l == 0:
+                if collision_types['left']:
+                    if slidding_wall_l == 1:
+                        a_slide_r = 1
+                        double_jump = 1
+                        player_y_momentum /= 2
+                        slidding_wall_r = 0
+                        player.set_action('slide')
+                        player.set_flip(True)
 
-        # Weapon Stuff -------------------------------------------------------- #
-        mx, my = pygame.mouse.get_pos()
-        true_mx, true_my = ((mx - true_scroll[0] / player.x) / 4, (my - true_scroll[1] / player.y) / 4)
-        true_px, true_py = (player.x - true_scroll[0]) + 5, (player.y - true_scroll[1]) + 6
-        wand_test = pygame.image.load('data/images/wand_test.png').convert()
-        wand_test.set_colorkey((255, 255, 255))
-        dx = true_mx - true_px
-        dy = true_my - true_py
-        rads = atan2(-dy, dx)
-        rads %= 2*pi
-        degs = degrees(rads)
-        true_degs = degs - 85
         #wand_test_copy = pygame.transform.rotate(wand_test, true_degs)
         #display.blit(wand_test_copy, (true_px - int(wand_test_copy.get_width() / 2), true_py - int(wand_test_copy.get_height() / 2)))
 
