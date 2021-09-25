@@ -15,7 +15,7 @@ WIN_SIZE = 960, 520
 surface = (960 / 4, 520 / 4)
 screen = pygame.display.set_mode(WIN_SIZE, 0, 32)
 display = pygame.Surface(surface)
-pygame.display.set_caption('BoreDoom Beta v3.6')
+pygame.display.set_caption('BoreDoom Beta v3.6.1')
 boredoom_icon = pygame.image.load('data/images/boredoom.png').convert()
 boredoom_icon.set_colorkey((0, 0, 0))
 pygame.display.set_icon(boredoom_icon)
@@ -371,8 +371,8 @@ def game():
         collision_types = player.move(player_movement, tile_rects)
 
         if collision_types['bottom']:
-            slidding_wall_r = 0
-            slidding_wall_l = 0
+            slidding_wall_r = 1
+            slidding_wall_l = 1
             a_slide_l = 0
             a_slide_r = 0
             jumped = 0
@@ -396,39 +396,42 @@ def game():
 
         if double_jump == 2:
             double_jump += 1
-            if slidding_wall_r == 0:
-                player_y_momentum = -5.75
-            if slidding_wall_l == 0:
-                player_y_momentum = -5.75
-            if slidding_wall_r == 1:
-                player_y_momentum = -5.75
-                a_slide_l = 0
-                a_slide_r = 1
-            if slidding_wall_l == 1:
-                player_y_momentum = -5.75
-                a_slide_r = 0
-                a_slide_l = 1
+            if collision_types['bottom']:
+                if slidding_wall_r == 0:
+                    player_y_momentum = -5.75
+                if slidding_wall_l == 0:
+                    player_y_momentum = -5.75
+            if collision_types['bottom'] == False:
+                if slidding_wall_r == 1:
+                    player_y_momentum = -5.75
+                    a_slide_l = 0
+                    a_slide_r = 1
+                if slidding_wall_l == 1:
+                    player_y_momentum = -5.75
+                    a_slide_r = 0
+                    a_slide_l = 1
             jump_sound.play()
 
-        if player_movement[1] > 0:
-            if a_slide_r == 0:
-                if collision_types['right']:
-                    if slidding_wall_r == 1:
-                        a_slide_l = 1
-                        double_jump = 1
-                        player_y_momentum /= 2
-                        slidding_wall_l = 0
-                        player.set_action('slide')
-                        player.set_flip(False)
-            if a_slide_l == 0:
-                if collision_types['left']:
-                    if slidding_wall_l == 1:
-                        a_slide_r = 1
-                        double_jump = 1
-                        player_y_momentum /= 2
-                        slidding_wall_r = 0
-                        player.set_action('slide')
-                        player.set_flip(True)
+        if collision_types['bottom'] == False:
+            if player_movement[1] > 0:
+                if slidding_wall_r == 1:
+                    if collision_types['right']:
+                        if a_slide_r == 0:
+                            a_slide_l = 1
+                            double_jump = 1
+                            player_y_momentum /= 2
+                            slidding_wall_l = 0
+                            player.set_action('slide')
+                            player.set_flip(False)
+                if slidding_wall_l == 1:
+                    if collision_types['left']:
+                        if a_slide_l == 0:
+                            a_slide_r = 1
+                            double_jump = 1
+                            player_y_momentum /= 2
+                            slidding_wall_r = 0
+                            player.set_action('slide')
+                            player.set_flip(True)
 
         #wand_test_copy = pygame.transform.rotate(wand_test, true_degs)
         #display.blit(wand_test_copy, (true_px - int(wand_test_copy.get_width() / 2), true_py - int(wand_test_copy.get_height() / 2)))
